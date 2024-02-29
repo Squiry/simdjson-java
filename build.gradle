@@ -52,8 +52,11 @@ dependencies {
     jmhImplementation group: 'com.jsoniter', name: 'jsoniter', version: '0.9.23'
     jmhImplementation group: 'com.github.plokhotnyuk.jsoniter-scala', name: 'jsoniter-scala-core_2.13', version: jsoniterScalaVersion
     jmhImplementation group: 'com.google.guava', name: 'guava', version: '32.1.2-jre'
+    jmhImplementation group: 'ru.tinkoff.kora', name: 'json-common', version: '1.0.5'
+    jmhAnnotationProcessor group: 'ru.tinkoff.kora', name: 'json-annotation-processor', version: '1.0.5'
     compileOnly group: 'com.github.plokhotnyuk.jsoniter-scala', name: 'jsoniter-scala-macros_2.13', version: jsoniterScalaVersion
 
+    testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.0'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
     testImplementation group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitVersion
@@ -115,6 +118,7 @@ tasks.register('test512', Test) {
 }
 
 test {
+    dependsOn 'test128'
     dependsOn 'test256'
     dependsOn 'test512'
 }
@@ -143,11 +147,12 @@ javadoc.options {
 
 jmh {
     fork = 1
-    warmupIterations = 3
-    iterations = 5
+//    warmupIterations = 3
+//    iterations = 5
     jvmArgsPrepend = [
             '--add-modules=jdk.incubator.vector'
     ]
+    profilers = ["dtraceasm"]
     if (getBooleanProperty('jmh.profilersEnabled', false)) {
         if (OperatingSystem.current().isLinux()) {
             profilers = [

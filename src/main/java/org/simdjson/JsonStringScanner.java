@@ -23,7 +23,6 @@ class JsonStringScanner {
     }
 
     JsonStringBlock next(ByteVector chunk0) {
-        assert chunk0.species() == ByteVector.SPECIES_512;
         var backslash = eq(chunk0, BACKSLASH_MASK_512);
         var escaped = findEscaped(backslash);
         var quote = eq(chunk0, QUOTE_MASK_512) & ~escaped;
@@ -33,8 +32,6 @@ class JsonStringScanner {
     }
 
     JsonStringBlock next(ByteVector chunk0, ByteVector chunk1) {
-        assert chunk0.species() == ByteVector.SPECIES_256;
-        assert chunk1.species() == ByteVector.SPECIES_256;
         var backslash = eq(chunk0, chunk1, BACKSLASH_MASK_256);
         var escaped = findEscaped(backslash);
         var quote = eq(chunk0, chunk1, QUOTE_MASK_256) & ~escaped;
@@ -44,10 +41,6 @@ class JsonStringScanner {
     }
 
     JsonStringBlock next(ByteVector chunk0, ByteVector chunk1, ByteVector chunk2, ByteVector chunk3) {
-        assert chunk0.species() == ByteVector.SPECIES_128;
-        assert chunk1.species() == ByteVector.SPECIES_128;
-        assert chunk2.species() == ByteVector.SPECIES_128;
-        assert chunk3.species() == ByteVector.SPECIES_128;
         var backslash = eq(chunk0, chunk1, chunk2, chunk3, BACKSLASH_MASK_128);
         var escaped = findEscaped(backslash);
         var quote = eq(chunk0, chunk1, chunk2, chunk3, QUOTE_MASK_128) & ~escaped;

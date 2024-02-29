@@ -105,6 +105,23 @@ public class JsonValue {
         return null;
     }
 
+    public JsonValue get(byte[] rename) {
+        int idx = tapeIdx + 1;
+        int endIdx = tape.getMatchingBraceIndex(tapeIdx) - 1;
+        while (idx < endIdx) {
+            int stringBufferIdx = (int) tape.getValue(idx);
+            int len = IntegerUtils.toInt(stringBuffer, stringBufferIdx);
+            int valIdx = tape.computeNextIndex(idx);
+            idx = tape.computeNextIndex(valIdx);
+            int stringBufferFromIdx = stringBufferIdx + Integer.BYTES;
+            int stringBufferToIdx = stringBufferFromIdx + len;
+            if (Arrays.compare(rename, 0, rename.length, stringBuffer, stringBufferFromIdx, stringBufferToIdx) == 0) {
+                return new JsonValue(tape, valIdx, stringBuffer, buffer);
+            }
+        }
+        return null;
+    }
+
     public int getSize() {
         return tape.getScopeCount(tapeIdx);
     }

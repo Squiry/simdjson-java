@@ -1,5 +1,9 @@
 package org.simdjson;
 
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.SerializableString;
+import com.fasterxml.jackson.core.io.SerializedString;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -34,6 +38,89 @@ public class BenchmarkCorrectnessTest {
             }
         }
 
+        // then
+        assertThat(defaultUsers.size()).isEqualTo(86);
+    }
+    @Test
+    public void countUniqueTwitterUsersWithDefaultProfileJackson() throws IOException {
+        // given
+        Set<String> defaultUsers = new HashSet<>();
+        byte[] json = loadTestFile("/twitter.json");
+
+        // when
+        SerializableString statusesStr = new SerializedString("statuses");
+        SerializableString userStr = new SerializedString("user");
+        SerializableString defaultProfileStr = new SerializedString("default_profile");
+        SerializableString screenNameStr = new SerializedString("screen_name");
+        try (var parser = new ObjectMapper().createParser(json)) {
+            var token = parser.nextToken();
+            if (token != JsonToken.START_OBJECT) {
+                parser.skipChildren();
+            } else {
+                while (true) {
+                    if (parser.nextFieldName(statusesStr)) {
+                        token = parser.nextToken();
+                        if (token != JsonToken.START_ARRAY) {
+                            parser.skipChildren();
+                            continue;
+                        }
+                        // statuses
+                        while (true) {
+                            token = parser.nextToken();
+                            if (token == JsonToken.END_ARRAY) {
+                                break;
+                            }
+                            if (token != JsonToken.START_OBJECT) {
+                                parser.skipChildren();
+                                continue;
+                            }
+                            while (true) {
+                                if (parser.nextFieldName(userStr)) {
+                                    token = parser.nextToken();
+                                    if (token != JsonToken.START_OBJECT) {
+                                        parser.skipChildren();
+                                        continue;
+                                    }
+                                    boolean defaultProfile = false;
+                                    String screenName = null;
+                                    while (true) {
+                                        if (parser.nextFieldName(defaultProfileStr)) {
+                                            parser.nextToken();
+                                            defaultProfile = parser.getBooleanValue();
+                                        } else if (parser.currentToken() == JsonToken.FIELD_NAME && parser.currentName().equals("screen_name")) {
+                                            parser.nextToken();
+                                            screenName = parser.getValueAsString();
+                                        } else {
+                                            if (parser.currentToken() == JsonToken.END_OBJECT) {
+                                                break;
+                                            }
+                                            parser.nextToken();
+                                            parser.skipChildren();
+                                        }
+                                    }
+                                    if (defaultProfile) {
+                                        defaultUsers.add(screenName);
+                                    }
+                                } else {
+                                    System.out.println(parser.currentName());
+                                    if (parser.currentToken() == JsonToken.END_OBJECT) {
+                                        break;
+                                    }
+                                    parser.nextToken();
+                                    parser.skipChildren();
+                                }
+                            }
+                        }
+                    } else {
+                        if (parser.currentToken() == JsonToken.END_OBJECT) {
+                            break;
+                        }
+                        parser.nextToken();
+                        parser.skipChildren();
+                    }
+                }
+            }
+        }
         // then
         assertThat(defaultUsers.size()).isEqualTo(86);
     }
